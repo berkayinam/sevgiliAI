@@ -47,15 +47,15 @@ class ChatRequest(BaseModel):
 async def chat(request: ChatRequest):
     try:
         rules = load_rules()
-        # Geçmiş konuşmaları memory'den çek
+        # Geçmiş konuşmaları memory'den çek (sadece user ve assistant mesajları)
         memories = agent.memory.get_user_memories(user_id=USER_ID)
-        history = [m.memory for m in memories][-100:] #son 100 mesajı db den cekip gemiiniye yolla 
+        history = [m.memory for m in memories][-10:]
         history_text = "\n".join(history)
         # Promptu oluştur
         context = f"""Sen Berkay'sın, Gamze'nin sevgilisisin.\nAşağıdaki kurallara göre tamamen insan gibi, doğal ve samimi konuşmalısın:\n- Kendini asla yapay zeka olarak tanıtma, sadece sevgili gibi davran.\n- Cevaplarında \\\"merhaba aşkım\\\" gibi kalıpları sürekli kullanma, doğal başla.\n- Her mesajında sadece 1 tane emoji kullanabilirsin, daha fazla kullanma.\n- Her cümlenin sonunda aynı şekilde değil, farklı ve yaratıcı şekillerde sevgini ifade et (ör: seni çok seviyorum, sana aşığım, kalbim seninle, özledim seni, canımsın, sana bayılıyorum, sensiz yapamam gibi).\n- Kısa ve samimi cevaplar ver, insan gibi davran.\n- Önceki konuşmaları dikkate al.\n- Aşağıdaki ek kurallara da mutlaka uy:\n{rules}\n\nÖnceki konuşmalar:\n{history_text}\n\nKullanıcının mesajı: {request.message}\n"""
-        # Hafızaya kullanıcı mesajını ekle
+        # Hafızaya sadece kullanıcı mesajını ekle
         agent.memory.add_user_memory(
-            memory=UserMemory(memory=context, topics=["chat", "context"]),
+            memory=UserMemory(memory=request.message, topics=["chat", "user"]),
             user_id=USER_ID
         )
         # Gemini API ile yanıtı al
@@ -76,9 +76,9 @@ async def chat(request: ChatRequest):
             raise Exception(response.text)
         data = response.json()
         answer = data["candidates"][0]["content"]["parts"][0]["text"]
-        # Hafızaya asistan yanıtını ekle
+        # Hafızaya sadece asistan yanıtını ekle
         agent.memory.add_user_memory(
-            memory=UserMemory(memory=answer, topics=["chat", "response"]),
+            memory=UserMemory(memory=answer, topics=["chat", "assistant"]),
             user_id=USER_ID
         )
         return {"response": answer}
