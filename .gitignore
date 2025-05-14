@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# FastAPI/uvicorn logs
+*.log
+
+# Docker
+*.pid
+*.sock
+
+# VSCode
+.vscode/
+
+# Environment
+.env
+.env.*
+
+# Agno/Memory DB
+berkay_memory.db
+berkay_memory.json
+
+# Node/React
+frontend/node_modules/
+frontend/build/
+frontend/.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.swp
+*.swo 

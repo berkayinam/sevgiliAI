@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  backend:
+    build: .
+    container_name: berkay-ai-backend
+    ports:
+      - "2300:2300"
+    volumes:
+      - .:/app
+    environment:
+      - PORT=2300
+
+  frontend:
+    build: ./frontend
+    container_name: berkay-ai-frontend
+    ports:
+      - "2301:2301"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:2300
+      - PORT=2301
+      - WDS_SOCKET_PORT=2301
+    depends_on:
+      - backend
