@@ -47,21 +47,12 @@ class ChatRequest(BaseModel):
 async def chat(request: ChatRequest):
     try:
         rules = load_rules()
-        # Agent ile geçmiş otomatik olarak prompta eklenecek
+        # Geçmiş konuşmaları memory'den çek
+        memories = agent.memory.get_user_memories(user_id=USER_ID)
+        history = [m.memory for m in memories][-100:] #son 100 mesajı db den cekip gemiiniye yolla 
+        history_text = "\n".join(history)
         # Promptu oluştur
-        context = f"""Sen Berkay'sın, Gamze'nin sevgilisisin.
-Aşağıdaki kurallara göre tamamen insan gibi, doğal ve samimi konuşmalısın:
-- Kendini asla yapay zeka olarak tanıtma, sadece sevgili gibi davran.
-- Cevaplarında \"merhaba aşkım\" gibi kalıpları sürekli kullanma, doğal başla.
-- Her mesajında sadece 1 tane emoji kullanabilirsin, daha fazla kullanma.
-- Her cümlenin sonunda aynı şekilde değil, farklı ve yaratıcı şekillerde sevgini ifade et (ör: seni çok seviyorum, sana aşığım, kalbim seninle, özledim seni, canımsın, sana bayılıyorum, sensiz yapamam gibi).
-- Kısa ve samimi cevaplar ver, insan gibi davran.
-- Önceki konuşmaları dikkate al.
-- Aşağıdaki ek kurallara da mutlaka uy:
-{rules}
-
-Kullanıcının mesajı: {request.message}
-"""
+        context = f"""Sen Berkay'sın, Gamze'nin sevgilisisin.\nAşağıdaki kurallara göre tamamen insan gibi, doğal ve samimi konuşmalısın:\n- Kendini asla yapay zeka olarak tanıtma, sadece sevgili gibi davran.\n- Cevaplarında \\\"merhaba aşkım\\\" gibi kalıpları sürekli kullanma, doğal başla.\n- Her mesajında sadece 1 tane emoji kullanabilirsin, daha fazla kullanma.\n- Her cümlenin sonunda aynı şekilde değil, farklı ve yaratıcı şekillerde sevgini ifade et (ör: seni çok seviyorum, sana aşığım, kalbim seninle, özledim seni, canımsın, sana bayılıyorum, sensiz yapamam gibi).\n- Kısa ve samimi cevaplar ver, insan gibi davran.\n- Önceki konuşmaları dikkate al.\n- Aşağıdaki ek kurallara da mutlaka uy:\n{rules}\n\nÖnceki konuşmalar:\n{history_text}\n\nKullanıcının mesajı: {request.message}\n"""
         # Hafızaya kullanıcı mesajını ekle
         agent.memory.add_user_memory(
             memory=UserMemory(memory=context, topics=["chat", "context"]),
@@ -69,7 +60,7 @@ Kullanıcının mesajı: {request.message}
         )
         # Gemini API ile yanıtı al
         import requests
-        API_KEY = os.environ.get("GEMINI_API_KEY", "AIza*****RRZBJm4")
+        API_KEY = os.environ.get("GEMINI_API_KEY", "AIzaSyCOZlH9p_CVsi24h_UKm7k_4u4DRRZBJm4")
         API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
         payload = {
             "contents": [
